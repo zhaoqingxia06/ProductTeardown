@@ -146,6 +146,7 @@ const flows={
 let currentFlow='follow',currentStep=0,workMode=false,exploded=false,lastAdvance=0;
 const tree=document.querySelector('#tree'),stepList=document.querySelector('#steps'),info=document.querySelector('#infoContent');
 function renderTree(){
+ const whole=document.createElement('button');whole.className='part-btn active';whole.dataset.id='whole';whole.innerHTML='整机<small>系统总览</small>';whole.addEventListener('click',function(){selectPart('whole')});tree.append(whole);
  groups.forEach(function(group){
   const label=document.createElement('div');label.className='group-label';label.textContent=group[0];tree.append(label);
   group[1].forEach(function(id){const b=document.createElement('button');b.className='part-btn';b.dataset.id=id;b.innerHTML=D[id].name+'<small>'+D[id].sub+'</small>';b.addEventListener('click',function(){selectPart(id)});tree.append(b)});
@@ -323,21 +324,21 @@ function animate(t){
   optics.rotation.y=headShell.rotation.y;
   headShell.rotation.x=Math.sin(sec*.8)*.045;
   optics.rotation.x=headShell.rotation.x;
-  body.position.y=1.36+Math.sin(sec*2.2)*.025;
+  
   wheelMeshes.forEach(function(w,i){w.rotation.x=sec*3.5*(i===0?1:-1)});
   legs.rotation.z=Math.sin(sec*2)*.025;
  }else{
-  headShell.rotation.set(0,0,0);optics.rotation.set(0,0,0);body.position.y=1.36;legs.rotation.z=0;
+  headShell.rotation.set(0,0,0);optics.rotation.set(0,0,0);legs.rotation.z=0;
   wheelMeshes.forEach(function(w){w.rotation.set(0,0,0)});
  }
- if(follow&&currentFlow==='follow'&&currentStep===2)tracker.visible=true;
- else if(!workMode)tracker.visible=activePart==='tracker'||exploded;
+ tracker.visible=workMode?(follow&&currentStep===2):(activePart==='tracker'||exploded);
  if(terrain&&currentStep>=2&&currentStep<=5){legs.rotation.z=Math.sin(sec*5)*.16;body.position.y=1.36+Math.abs(Math.sin(sec*5))*.12;wheelMeshes.forEach(function(w){w.rotation.x=sec*5})}
  Object.keys(parts).forEach(function(id){parts[id].forEach(function(g){if(g.userData.target)g.position.lerp(g.userData.target,.09)})});
  energyCurves.concat(signalCurves).forEach(function(p){const on=workMode;p.line.visible=on;p.dot.visible=on;if(on)p.dot.position.copy(p.curve.getPoint((sec*.28+p.phase)%1))});
  if(controls)controls.update();
  if(renderer)renderer.render(scene,camera);
 }
+root.traverse(function(o){if(o.isMesh&&o.material){o.material=Array.isArray(o.material)?o.material.map(function(m){return m.clone()}):o.material.clone()}});
 renderTree();renderInfo('whole');highlight('whole');setExplode(false);resize();window.addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);requestAnimationFrame(animate);
 </script>
 </body>
