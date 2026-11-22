@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<script>if(performance.getEntriesByType('navigation')[0]?.type==='reload')location.replace('./');</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beni 跟拍机器人 · 产品拆解</title>
+<style>
+:root{--ink:#202328;--muted:#7b818b;--line:#e9ebef;--blue:#3979c9;--blue-soft:#eaf2fc;--panel:rgba(255,255,255,.88)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:#f4f5f7}
+button{font:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+header{height:56px;background:rgba(255,255,255,.94);border-bottom:1px solid #e9eaec;display:flex;align-items:center;padding:0 24px;gap:14px;position:relative;z-index:5}
+.back{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#454b54;font-size:22px;line-height:1}
+header strong{font-size:15px;font-weight:650}
+header .sub{margin-left:auto;color:#8a9098;font-size:12px}
+main{height:calc(100dvh - 56px);min-height:650px;display:grid;grid-template-columns:276px minmax(360px,1fr) 300px;gap:0}
+aside{background:#fff;min-width:0;overflow:auto}
+#navigation{border-right:1px solid var(--line);padding:25px 16px 28px}
+#infoPanel{border-left:1px solid var(--line);padding:26px 22px}
+.section-label{font-size:12px;color:#858b94;letter-spacing:.04em;margin:0 8px 16px}
+.group-label{font-size:11px;color:#a0a5ad;margin:18px 8px 6px}
+.part-btn,.step-btn{display:block;width:100%;border:0;background:transparent;text-align:left;color:#41464d;border-radius:8px;padding:10px 11px;line-height:1.45}
+.part-btn:hover,.step-btn:hover{background:#f5f7fa}
+.part-btn.active,.step-btn.active{background:var(--blue-soft);color:#245f9f;font-weight:600}
+.part-btn small{display:block;font-size:11px;color:#969ca5;font-weight:400;margin-top:3px}
+#stage{position:relative;min-width:0;min-height:0;margin:14px;background:radial-gradient(ellipse at 48% 40%,#fff 0%,#f2f3f5 64%,#e7e9ed 100%);border-radius:14px;overflow:hidden}
+#view{width:100%;height:100%;display:block;touch-action:none}
+.stage-top{position:absolute;left:22px;top:20px;pointer-events:none}
+.stage-top b{font-size:14px;font-weight:650}
+.stage-top span{display:block;color:#8a9098;font-size:11px;margin-top:5px}
+.stage-tools{position:absolute;left:20px;bottom:20px;display:flex;gap:8px;align-items:center}
+.stage-tools button{border:1px solid rgba(215,219,225,.9);background:rgba(255,255,255,.78);backdrop-filter:blur(14px);color:#454b53;border-radius:9px;padding:9px 13px;font-size:12px;box-shadow:0 3px 14px rgba(30,40,55,.05)}
+.stage-tools button.primary{background:rgba(35,43,54,.88);border-color:rgba(35,43,54,.88);color:white}
+.stage-tools button:disabled{opacity:.4;cursor:not-allowed}
+.stage-hint{position:absolute;right:18px;top:20px;color:#9298a1;font-size:11px;pointer-events:none}
+#focusTag{position:absolute;right:18px;bottom:22px;padding:8px 11px;border-radius:8px;background:rgba(255,255,255,.78);backdrop-filter:blur(12px);font-size:11px;color:#536174;pointer-events:none}
+.legend{position:absolute;right:18px;bottom:62px;display:none;gap:12px;padding:8px 10px;background:rgba(255,255,255,.72);border-radius:8px;color:#7b8490;font-size:10px;backdrop-filter:blur(12px)}
+.legend span{display:flex;align-items:center;gap:5px}.legend i{display:block;width:16px;height:2px;background:#438bd6;border-radius:2px}.legend i.signal{height:0;border-top:2px dashed #8a9dc2;background:none}
+#infoPanel h1{font-size:20px;line-height:1.25;margin:2px 0 7px;letter-spacing:-.02em}
+.kicker{font-size:11px;color:#8b929b;margin-bottom:22px}
+.info-block{margin:22px 0 0}
+.info-block h3{font-size:11px;font-weight:600;color:#8b929b;margin:0 0 8px}
+.info-block p{font-size:13px;line-height:1.75;color:#454b53;margin:0}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;margin-top:8px}
+.spec{border-bottom:1px solid #edf0f2;padding-bottom:9px}
+.spec span{display:block;font-size:10px;color:#9299a2;margin-bottom:5px}
+.spec b{font-size:13px;font-weight:600;color:#333a43}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#5478a6;background:#eef4fb;border-radius:5px;padding:4px 7px;margin-top:12px}
+.status.inferred{color:#8a7654;background:#f7f2e9}
+.source-list{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.source-list a{font-size:11px;color:#5279a7;line-height:1.5}
+.source-list a:hover{text-decoration:underline}
+.note{font-size:11px;line-height:1.65;color:#9298a1;margin:17px 0 0}
+#workflowView{display:none}
+body.workflow #structureView{display:none}
+body.workflow #workflowView{display:block}
+body.workflow .legend{display:flex}
+.step-btn{padding:11px 10px;margin:0 0 5px;font-size:12px}
+.step-btn b{font-size:12px;font-weight:600}
+.step-btn small{display:block;color:#8c929b;font-size:11px;line-height:1.55;font-weight:400;margin-top:4px}
+body.workflow #infoPanel .kicker{margin-bottom:18px}
+.flow-modes{display:flex;gap:5px;margin:0 5px 13px}
+.flow-modes button{border:0;background:#f1f2f4;border-radius:7px;padding:7px 9px;color:#737b86;font-size:11px}
+.flow-modes button.active{background:#e8f0fb;color:#2868ad;font-weight:600}
+#modelFallback{position:absolute;inset:0;display:none;place-items:center;text-align:center;color:#858c96;font-size:13px;padding:30px;pointer-events:none}
+@media(max-width:1100px){main{grid-template-columns:240px minmax(300px,1fr) 260px}#navigation{padding:22px 12px}#infoPanel{padding:22px 16px}}
+@media(max-width:800px){header{padding:0 16px}header .sub{display:none}main{height:auto;min-height:0;display:flex;flex-direction:column;gap:0}#stage{order:1;height:56vh;min-height:390px;margin:10px;border-radius:12px}#navigation{order:2;border-right:0;border-top:1px solid var(--line);padding:18px 16px;max-height:none}#infoPanel{order:3;border-left:0;border-top:1px solid var(--line);padding:22px 20px}body.workflow #navigation{max-height:none}.stage-tools{left:12px;bottom:12px;gap:5px}.stage-tools button{padding:8px 10px}.stage-hint{right:12px;top:12px}.stage-top{left:14px;top:14px}.legend{right:12px;bottom:56px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><a class="back" href="./" aria-label="返回产品库">‹</a><strong>Beni 跟拍机器人</strong><span class="sub">结构与工作原理</span></header>
+<main>
+<aside id="navigation">
+ <div id="structureView"><div class="section-label">产品结构</div><div id="tree"></div></div>
+ <div id="workflowView">
+  <div class="section-label">工作流程</div>
+  <div class="flow-modes"><button class="active" data-flow="follow">自动跟拍</button><button data-flow="terrain">越障与自恢复</button></div>
+  <div id="steps"></div>
+  <p class="note">流程依据公开功能描述整理；算法、控制器型号及内部阈值未公开。自动循环播放，点击步骤可重新讲解。</p>
+ </div>
+</aside>
+<section id="stage">
+ <canvas id="view"></canvas>
+ <div id="modelFallback">当前浏览器无法创建 WebGL 场景。<br>可以继续查看左侧结构目录与右侧说明。</div>
+ <div class="stage-top"><b id="stageTitle">Beni</b><span id="stageSub">双轮腿式移动摄影机器人</span></div>
+ <div class="stage-hint">拖动旋转 · 滚轮缩放</div>
+ <div class="stage-tools"><button class="primary" id="modeToggle">工作原理</button><button id="explodeToggle">展开结构</button><button id="resetView">复位视角</button></div>
+ <div class="legend"><span><i></i>能量路径</span><span><i class="signal"></i>感知 / 控制信号</span></div>
+ <div id="focusTag">结构模型 · 内部组件为架构示意</div>
+</section>
+<aside id="infoPanel"><div id="infoContent"></div></aside>
+</main>
+<script type="module">
+import * as T from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const D={
+ whole:{name:'Beni 跟拍机器人',sub:'整机',what:'一台具备自动跟随、移动拍摄、障碍感知与自恢复能力的双轮腿式摄影机器人。通过机载视觉与辅助追踪器定位拍摄对象，再由轮腿机构移动并调整拍摄角度。',spec:[['图像传感器','1/1.3″ CMOS'],['视频规格','4K / 60 fps HDR'],['最高速度','28.8 km/h'],['最大跃障高度','25.4 cm'],['续航','约 90 min'],['整机重量','约 1.8 kg'],['尺寸','16.6 × 21.5 × 21.8 cm'],['存储','32 GB + microSD']],confidence:'公开规格'},
+ head:{name:'头部外壳与云台',sub:'成像组件',what:'头部承载主摄像头与双侧灯光，能够调整朝向和俯仰角度。移动过程中配合机械稳定结构与电子防抖，保持画面稳定。',spec:[['结构','可动头部 / 机械稳定'],['镜头方向','俯仰与朝向可调']],confidence:'外观可见；内部结构推断'},
+ camera:{name:'主摄像头模组',sub:'成像组件',what:'负责采集视频画面，也是视觉跟踪的重要输入。官方公开 1/1.3 英寸 CMOS，并支持 4K 视频录制。',spec:[['图像传感器','1/1.3″ CMOS'],['最高视频','4K / 60 fps HDR'],['光圈','f/2.8'],['存储','32 GB + microSD']],confidence:'公开规格'},
+ eyes:{name:'双侧眼灯',sub:'交互组件',what:'头部两侧的灯光承担拟人化表情与状态反馈作用；具体灯珠数量、驱动电路及灯效状态未公开。',spec:[['外观','双侧圆形灯罩'],['灯珠 / 功率','未披露']],confidence:'外观可见'},
+ sensors:{name:'视觉与空间感知窗口',sub:'感知组件',what:'机身前部可见感知窗口。官方说明避障依赖光学与空间传感器，跟拍使用深度感知；具体传感器类型、数量和布置未披露。',spec:[['感知方式','光学与空间感知'],['深度感知','官方功能描述'],['传感器型号','未披露']],confidence:'功能公开；器件推断'},
+ chassis:{name:'机身骨架与外壳',sub:'结构组件',what:'承载电池、控制电路和腿部驱动机构，并保护内部器件。外壳形状、材料牌号、内部骨架及连接方式没有公开拆机资料。',spec:[['整机尺寸','16.6 × 21.5 × 21.8 cm'],['外壳材料','未披露'],['骨架材料','未披露']],confidence:'外观可见；内部结构推断'},
+ battery:{name:'可更换电池',sub:'供电组件',what:'为计算、成像、驱动和传感系统供电。电池支持快速更换，单块电池官方标称约 90 分钟续航；电芯类型、容量与电压未公开。',spec:[['续航','约 90 min / 块'],['充电时间','约 60 min'],['更换方式','可更换电池'],['容量 / 电压','未披露']],confidence:'公开规格'},
+ control:{name:'主控与电源管理',sub:'控制组件',what:'作为系统控制中心，接收视觉、空间感知与追踪器信息，协调运动、拍摄和电源管理。芯片型号、板卡布局与电源拓扑未公开；此处按机器人系统架构示意。',spec:[['核心计算平台','未披露'],['运动控制器','未披露'],['本地处理','跟踪与拍摄在设备端完成']],confidence:'功能推断'},
+ drive:{name:'轮毂驱动与关节执行器',sub:'运动组件',what:'驱动两侧车轮，并通过腿部关节改变轮组相对机身的位置。双轮腿可弯曲、伸展，支持加速、转向、蹲伏、跃障和跌倒后的姿态恢复。电机类型、减速比和扭矩未公开。',spec:[['运动形式','双轮 + 可动腿部'],['最高速度','28.8 km/h'],['最大跃障高度','25.4 cm'],['电机参数','未披露']],confidence:'运动结构可见；内部执行器推断'},
+ legs:{name:'双侧可动腿机构',sub:'运动组件',what:'连接机身与轮组的两侧连杆机构，通过弯曲和伸展改变机身高度与姿态，为越障、跳跃和自恢复提供运动行程。具体连杆尺寸、关节形式与驱动配置未披露。',spec:[['数量','2 组'],['运动','弯曲 / 伸展'],['最大跃障高度','25.4 cm']],confidence:'外观与实测描述支持'},
+ wheels:{name:'可替换轮组',sub:'移动组件',what:'两侧车轮负责地面行驶。标准轮适用于地板、瓷砖、混凝土等平整表面；越野轮采用更明显的胎纹，适用于草地等非铺装表面。',spec:[['轮组','标准轮 / 越野轮'],['数量','2 只'],['驱动','电机驱动（结构推断）']],confidence:'轮组公开；驱动结构推断'},
+ tracker:{name:'体感追踪器',sub:'外置配件',what:'腕戴式控制器。既可向 Beni 提供辅助定位信号，也可直接控制移动、跟随和拍摄，并提供触觉反馈。视线短暂受阻时，辅助信号可帮助重新锁定目标。',spec:[['形态','腕戴式控制器'],['反馈','触觉反馈'],['最大距离','约 30 m（开阔环境）']],confidence:'公开配件与功能'}
+};
+const groups=[
+ ['成像与交互',['head','camera','eyes']],
+ ['感知与控制',['sensors','control']],
+ ['机身与供电',['chassis','battery']],
+ ['运动执行',['drive','legs','wheels']],
+ ['外置配件',['tracker']]
+];
+const flows={
+ follow:[
+ ['采集目标信息','机载摄像头持续采集画面，深度感知与空间传感器提供距离和环境信息。','camera'],
+ ['识别并锁定目标','视觉跟踪识别人或宠物，估计目标在画面中的位置；识别能力与具体算法未公开。','sensors'],
+ ['辅助定位与重锁定','体感追踪器提供辅助信号。短暂遮挡时，系统可结合辅助信号重新定位目标。','tracker'],
+ ['估计相对位置','控制系统综合视觉与追踪器信息，估计目标相对方向和距离，并确定跟随位置。','control'],
+ ['环境感知与路径决策','光学和空间传感器检测障碍物，系统决定继续跟随、调整路线或暂停。具体规划算法未公开。','sensors'],
+ ['计算运动指令','主控向左右轮驱动和腿部执行机构发送速度、转向及姿态指令。','drive'],
+ ['移动并调整姿态','双轮驱动机器人前进或转向；腿部弯曲、伸展以适应地形并保持机身姿态。','legs'],
+ ['镜头跟随与稳定','头部调整拍摄方向，机械稳定结构与电子防抖共同减轻移动带来的画面抖动。','head'],
+ ['录制并本地存储','摄像头采集视频并写入机身存储或 microSD；跟踪与拍摄核心处理在设备端完成。','camera'],
+ ['持续反馈','系统持续更新目标位置、环境与机身状态，再次计算移动和构图指令，形成闭环。','control']
+ ],
+ terrain:[
+ ['检测地面与障碍','前向光学和空间传感器感知路面、路缘及障碍物。具体传感器组合未披露。','sensors'],
+ ['判断通行方式','控制系统判断继续行驶、调整姿态、跃过路缘或绕行；此处为功能策略示意。','control'],
+ ['腿部预备与蓄势','两侧可动腿机构弯曲，调整轮组和机身姿态，为跨越障碍提供运动行程。','legs'],
+ ['轮腿协同跃障','驱动轮组并伸展腿部，完成向前跃起和越过路缘动作。','drive'],
+ ['落地与姿态校正','轮组接触地面后，执行机构调整姿态，抑制机身倾斜并恢复稳定。','legs'],
+ ['跌倒后自恢复','若机身翻倒，腿部机构通过反向运动将机身重新撑起，恢复可行驶姿态。','drive'],
+ ['恢复跟拍','姿态恢复后重新定位目标，回到自动跟拍闭环。','camera']
+ ]
+};
+let currentFlow='follow',currentStep=0,workMode=false,exploded=false,lastAdvance=0;
+const tree=document.querySelector('#tree'),stepList=document.querySelector('#steps'),info=document.querySelector('#infoContent');
+function renderTree(){
+ groups.forEach(function(group){
+  const label=document.createElement('div');label.className='group-label';label.textContent=group[0];tree.append(label);
+  group[1].forEach(function(id){const b=document.createElement('button');b.className='part-btn';b.dataset.id=id;b.innerHTML=D[id].name+'<small>'+D[id].sub+'</small>';b.addEventListener('click',function(){selectPart(id)});tree.append(b)});
+ });
+}
+function renderInfo(id){
+ const d=D[id]||D.whole;
+ const statusClass=d.confidence&&d.confidence.indexOf('推断')>=0?'status inferred':'status';
+ let html='<h1>'+d.name+'</h1><div class="kicker">'+d.sub+'</div>';
+ if(d.what)html+='<div class="info-block"><h3>功能与作用</h3><p>'+d.what+'</p></div>';
+ if(d.spec)html+='<div class="info-block"><h3>关键规格</h3><div class="specs">'+d.spec.map(function(s){return '<div class="spec"><span>'+s[0]+'</span><b>'+s[1]+'</b></div>'}).join('')+'</div></div>';
+ if(d.confidence)html+='<div class="'+statusClass+'">'+d.confidence+'</div>';
+ if(id==='whole')html+='<p class="note">模型采用公开外观信息进行原创重建；内部器件布局为功能架构示意，不代表官方 CAD 或实物拆机结果。</p><div class="info-block"><h3>资料来源</h3><div class="source-list"><a href="https://www.mondorobotics.com/pages/beni-camera-robot" target="_blank" rel="noopener">Mondo Robotics · Beni 官方规格与功能 ↗</a><a href="https://www.mondorobotics.com/pages/support/product-tutorials" target="_blank" rel="noopener">Mondo Robotics · 官方教程与 FAQ ↗</a><a href="https://www.tomsguide.com/cameras-photography/i-cant-fly-drones-in-nyc-so-i-let-this-camera-robot-follow-me-around-instead-and-came-away-impressed" target="_blank" rel="noopener">Tom’s Guide · 实机体验 ↗</a><a href="https://www.slashgear.com/2269448/mondo-robotics-beni-review/" target="_blank" rel="noopener">SlashGear · 跟踪与避障实测 ↗</a></div></div>';
+ info.innerHTML=html;
+}
+function renderStepInfo(){
+ const s=flows[currentFlow][currentStep];
+ const html='<h1>'+s[0]+'</h1><div class="kicker">工作原理 · '+String(currentStep+1).padStart(2,'0')+' / '+String(flows[currentFlow].length).padStart(2,'0')+'</div><div class="info-block"><h3>工作过程</h3><p>'+s[1]+'</p></div><div class="info-block"><h3>关联部件</h3><p>'+D[s[2]].name+'</p></div><div class="status">当前节点 · 自动循环演示</div><p class="note">蓝色实线表示能量供给路径，蓝色虚线表示感知、定位与控制信号。内部控制逻辑根据公开功能描述整理，未公开的算法和参数不作确定性还原。</p>';
+ info.innerHTML=html;
+}
+function selectPart(id){
+ if(workMode)return;
+ currentPart=id;
+ document.querySelectorAll('.part-btn').forEach(function(b){b.classList.toggle('active',b.dataset.id===id)});
+ renderInfo(id);
+ highlight(id);
+ document.querySelector('#focusTag').textContent=D[id].name;
+}
+function renderSteps(){
+ stepList.replaceChildren();
+ flows[currentFlow].forEach(function(s,i){
+  const b=document.createElement('button');b.className='step-btn';b.dataset.step=i;
+  b.innerHTML='<b>'+String(i+1).padStart(2,'0')+'　'+s[0]+'</b><small>'+s[1]+'</small>';
+  b.addEventListener('click',function(){currentStep=i;lastAdvance=performance.now();updateStep()});
+  stepList.append(b);
+ });
+ updateStep();
+}
+function updateStep(){
+ const s=flows[currentFlow][currentStep];
+ stepList.querySelectorAll('.step-btn').forEach(function(b,i){b.classList.toggle('active',i===currentStep)});
+ renderStepInfo();highlight(s[2]);
+ document.querySelector('#focusTag').textContent='当前部件 · '+D[s[2]].name;
+ document.querySelector('#stageTitle').textContent=s[0];
+ document.querySelector('#stageSub').textContent=s[1];
+ lastAdvance=performance.now();
+}
+document.querySelectorAll('[data-flow]').forEach(function(b){b.addEventListener('click',function(){
+ currentFlow=b.dataset.flow;currentStep=0;
+ document.querySelectorAll('[data-flow]').forEach(function(x){x.classList.toggle('active',x===b)});
+ renderSteps();
+})});
+document.querySelector('#modeToggle').addEventListener('click',function(){
+ workMode=!workMode;document.body.classList.toggle('workflow',workMode);
+ this.textContent=workMode?'产品结构':'工作原理';
+ document.querySelector('#explodeToggle').hidden=workMode;
+ if(workMode){exploded=false;setExplode(false);currentStep=0;renderSteps();document.querySelector('#stageTitle').textContent='自动跟拍';}
+ else{document.querySelector('#stageTitle').textContent='Beni';document.querySelector('#stageSub').textContent='双轮腿式移动摄影机器人';selectPart('whole');}
+});
+document.querySelector('#explodeToggle').addEventListener('click',function(){exploded=!exploded;setExplode(exploded);this.textContent=exploded?'收合结构':'展开结构'});
+document.querySelector('#resetView').addEventListener('click',function(){if(!renderer)return;camera.position.set(4.2,3.1,6.4);controls.target.set(0,1.35,0);controls.update()});
+
+const stage=document.querySelector('#stage'),canvas=document.querySelector('#view');
+let renderer=null,webgl=true;
+try{renderer=new T.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});}
+catch(e){webgl=false;document.querySelector('#modelFallback').style.display='grid';}
+const scene=new T.Scene();
+const camera=new T.PerspectiveCamera(34,1,.1,100);camera.position.set(4.2,3.1,6.4);
+const controls=webgl?new OrbitControls(camera,canvas):null;
+if(controls){controls.enableDamping=true;controls.dampingFactor=.065;controls.target.set(0,1.35,0);controls.minDistance=3.2;controls.maxDistance=10;controls.maxPolarAngle=Math.PI*.49;}
+if(renderer){renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;}
+scene.add(new T.HemisphereLight(0xffffff,0x9da5b1,2.15));
+const keyLight=new T.DirectionalLight(0xffffff,2.5);keyLight.position.set(4,7,5);keyLight.castShadow=true;keyLight.shadow.mapSize.set(1024,1024);scene.add(keyLight);
+const fillLight=new T.DirectionalLight(0xd8e6fb,1.2);fillLight.position.set(-4,3,-3);scene.add(fillLight);
+const floor=new T.Mesh(new T.CircleGeometry(3.5,80),new T.MeshStandardMaterial({color:0xe8eaed,roughness:.92}));floor.rotation.x=-Math.PI/2;floor.position.y=-.03;floor.receiveShadow=true;scene.add(floor);
+const root=new T.Group();scene.add(root);
+const parts={};
+const mat=(color,roughness=.38,metalness=0)=>new T.MeshStandardMaterial({color:color,roughness:roughness,metalness:metalness});
+const white=mat(0xe8e9e8,.3),white2=mat(0xd4d8dc,.42),dark=mat(0x20272f,.28,.22),rubber=mat(0x424850,.83),metal=mat(0x929ba5,.34,.68),blue=mat(0x4c91d9,.32,.25);
+function part(id,pos){
+ const g=new T.Group();g.position.set(pos[0],pos[1],pos[2]);g.userData.home=g.position.clone();g.userData.id=id;root.add(g);(parts[id]||(parts[id]=[])).push(g);return g;
+}
+function rounded(g,w,h,d,pos,material,r=.08){
+ const m=new T.Mesh(new RoundedBoxGeometry(w,h,d,5,r),material);m.position.set(pos[0],pos[1],pos[2]);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;
+}
+function sphere(g,r,pos,material,scale){
+ const m=new T.Mesh(new T.SphereGeometry(r,32,24),material);m.position.set(pos[0],pos[1],pos[2]);if(scale)m.scale.set(scale[0],scale[1],scale[2]);m.castShadow=true;g.add(m);return m;
+}
+function disc(g,r,depth,pos,material){
+ const m=new T.Mesh(new T.CylinderGeometry(r,r,depth,48),material);m.rotation.x=Math.PI/2;m.position.set(pos[0],pos[1],pos[2]);m.castShadow=true;g.add(m);return m;
+}
+function link(g,a,b,r1,r2,material){
+ const start=new T.Vector3(a[0],a[1],a[2]),end=new T.Vector3(b[0],b[1],b[2]),dir=end.clone().sub(start);
+ const m=new T.Mesh(new T.CylinderGeometry(r2,r1,dir.length(),28,1),material);m.position.copy(start.clone().add(end).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),dir.normalize());m.castShadow=true;g.add(m);return m;
+}
+function addWheel(g,x){
+ const w=new T.Group();w.position.set(x,.48,.02);g.add(w);
+ const tire=new T.Mesh(new T.CylinderGeometry(.39,.39,.23,64,1),rubber);tire.rotation.z=Math.PI/2;tire.castShadow=true;w.add(tire);
+ const outer=new T.Mesh(new T.TorusGeometry(.34,.07,16,64),mat(0x555d66,.75));outer.rotation.y=Math.PI/2;w.add(outer);
+ const hub=new T.Mesh(new T.CylinderGeometry(.23,.23,.245,48),white2);hub.rotation.z=Math.PI/2;w.add(hub);
+ const cap=new T.Mesh(new T.CylinderGeometry(.14,.14,.255,40),metal);cap.rotation.z=Math.PI/2;w.add(cap);
+ const center=new T.Mesh(new T.CylinderGeometry(.065,.065,.26,32),dark);center.rotation.z=Math.PI/2;w.add(center);
+ for(let i=0;i<28;i++){const a=i*Math.PI*2/28;const rib=new T.Mesh(new T.BoxGeometry(.235,.035,.045),mat(0x5c636c,.88));rib.position.set(0,.39*Math.cos(a),.39*Math.sin(a));rib.rotation.x=a;w.add(rib)}
+ return w;
+}
+const headShell=part('head',[0,2.12,0]);rounded(headShell,1.48,.48,.54,[0,.16,0],white,.19);
+const headTrim=rounded(headShell,1.24,.055,.035,[0,-.06,.286],white2,.02);
+const optics=part('camera',[0,2.12,0]);
+const eyeMat=new T.MeshStandardMaterial({color:0xf6f7f5,emissive:0xd7e8ff,emissiveIntensity:.75,roughness:.22});
+[-.43,.43].forEach(function(x){disc(optics,.205,.08,[x,.17,.31],white2);sphere(optics,.17,[x,.17,.36],eyeMat,[1,1,.36]);});
+disc(optics,.105,.09,[0,.17,.385],dark);sphere(optics,.065,[0,.17,.44],mat(0x182a3d,.12,.3),[1,1,.45]);sphere(optics,.022,[.018,.19,.462],mat(0xa8d5ff,.15,.1),[1,1,.4]);
+const gimbal=part('head',[0,2.02,0]);disc(gimbal,.22,.17,[0,0,0],metal);disc(gimbal,.14,.18,[0,0,.08],dark);
+const body=part('chassis',[0,1.36,0]);rounded(body,1.32,.84,.72,[0,0,0],white,.22);rounded(body,1.18,.55,.045,[0,-.02,.37],white2,.12);
+const chest=part('sensors',[0,1.36,0]);
+[-.39,.39].forEach(function(x){disc(chest,.095,.06,[x,-.19,.414],dark);sphere(chest,.047,[x,-.19,.45],mat(0x6d91b4,.2,.2),[1,1,.35]);});
+const battery=part('battery',[0,1.36,0]);rounded(battery,.58,.48,.3,[0,-.03,-.13],mat(0xb5bec9,.46),.055);rounded(battery,.42,.3,.035,[0,-.03,-.292],mat(0x8996a4,.55),.025);
+const board=part('control',[0,1.36,0]);rounded(board,.64,.43,.045,[0,.02,.1],mat(0x344d66,.5),.025);
+[-.2,0,.2].forEach(function(x){rounded(board,.12,.12,.035,[x,.02,.14],mat(0x8b9ba9,.42),.015)});
+rounded(board,.18,.16,.04,[0,.12,.14],mat(0x1c2936,.4),.015);
+const legs=part('legs',[0,0,0]);
+[-1,1].forEach(function(side){
+ const sx=side*.56, knee=side*.86, wheelX=side*.92;
+ const shoulder=new T.Mesh(new T.CylinderGeometry(.19,.19,.18,48),white2);shoulder.rotation.z=Math.PI/2;shoulder.position.set(sx,1.47,.02);shoulder.castShadow=true;legs.add(shoulder);
+ const shoulderCap=new T.Mesh(new T.CylinderGeometry(.12,.12,.2,40),metal);shoulderCap.rotation.z=Math.PI/2;shoulderCap.position.set(sx+side*.1,1.47,.02);legs.add(shoulderCap);
+ link(legs,[sx,1.45,.02],[knee,1.02,.02],.12,.16,white);
+ const joint=new T.Mesh(new T.CylinderGeometry(.16,.16,.22,40),white2);joint.rotation.z=Math.PI/2;joint.position.set(knee,1.02,.02);legs.add(joint);
+ link(legs,[knee,1.02,.02],[wheelX,.62,.02],.12,.14,white);
+});
+const drive=part('drive',[0,0,0]);
+[-.92,.92].forEach(function(x){const m=new T.Mesh(new T.CylinderGeometry(.2,.2,.28,48),metal);m.rotation.z=Math.PI/2;m.position.set(x,.48,.02);m.castShadow=true;drive.add(m);const c=new T.Mesh(new T.CylinderGeometry(.12,.12,.3,40),dark);c.rotation.z=Math.PI/2;c.position.set(x,.48,.02);drive.add(c)});
+const wheels=part('wheels',[0,0,0]);const wheelMeshes=[addWheel(wheels,-.92),addWheel(wheels,.92)];
+const tracker=part('tracker',[1.9,1.95,.2]);rounded(tracker,.36,.16,.28,[0,0,0],dark,.07);rounded(tracker,.23,.045,.16,[0,.1,0],white2,.025);sphere(tracker,.045,[0,.13,.01],blue,[1,.3,1]);tracker.visible=false;
+const groupsForExplosion={head:[0,1.0,0],camera:[0,1.55,.25],chassis:[0,-.25,0],sensors:[0,.05,.95],battery:[0,.1,-.95],control:[0,.45,.85],legs:[0,-.72,0],drive:[1.05,.1,0],wheels:[-1.05,-.1,0],tracker:[1.7,.2,.4]};
+const original={};
+Object.keys(parts).forEach(function(id){original[id]=parts[id].map(function(g){return g.position.clone()})});
+const focusByStep={camera:'camera',sensors:'sensors',tracker:'tracker',control:'control',drive:'drive',legs:'legs',head:'head'};
+let activePart='whole';
+function highlight(id){
+ activePart=id;
+ Object.keys(parts).forEach(function(key){parts[key].forEach(function(g){g.traverse(function(o){if(o.isMesh&&o.material&&o.material.emissive){o.material.emissive.set(key===id?0x2c78c8:0x000000);o.material.emissiveIntensity=key===id?.34:0}})})});
+}
+function setExplode(value){
+ exploded=value;
+ Object.keys(parts).forEach(function(id){parts[id].forEach(function(g){const offset=value?(groupsForExplosion[id]||[0,0,0]):[0,0,0];g.userData.target=g.userData.home.clone().add(new T.Vector3(offset[0],offset[1],offset[2]));})});
+}
+const energyCurves=[],signalCurves=[],particles=[];
+function addPath(points,color,dashed,phase){
+ const curve=new T.CatmullRomCurve3(points.map(function(p){return new T.Vector3(p[0],p[1],p[2])}));
+ const lineGeom=new T.BufferGeometry().setFromPoints(curve.getPoints(80));
+ const lineMat=dashed?new T.LineDashedMaterial({color:color,dashSize:.075,gapSize:.055,transparent:true,opacity:.85}):new T.LineBasicMaterial({color:color,transparent:true,opacity:.72});
+ const line=new T.Line(lineGeom,lineMat);if(dashed)line.computeLineDistances();line.visible=false;scene.add(line);
+ const dot=new T.Mesh(new T.SphereGeometry(.035,16,12),new T.MeshBasicMaterial({color:color}));dot.visible=false;scene.add(dot);
+ (dashed?signalCurves:energyCurves).push({curve:curve,line:line,dot:dot,phase:phase||0});
+}
+addPath([[0,1.33,-.25],[0,1.5,.18],[0,1.42,.52],[0,1.45,.9]],0x4e91d6,false,0);
+addPath([[0,1.33,-.25],[.48,1.0,-.05],[.92,.72,.02]],0x4e91d6,false,.33);
+addPath([[0,1.33,-.25],[-.48,1.0,-.05],[-.92,.72,.02]],0x4e91d6,false,.66);
+addPath([[0,2.3,.45],[0,1.72,.48],[0,1.43,.18]],0x8a9dc2,true,.2);
+addPath([[1.9,1.95,.2],[1.2,1.8,.15],[.45,1.5,.25],[0,1.43,.18]],0x8a9dc2,true,.55);
+addPath([[0,1.43,.18],[.5,1.25,.2],[.92,.72,.02]],0x8a9dc2,true,.8);
+function setPaths(on){energyCurves.concat(signalCurves).forEach(function(p){p.line.visible=on;p.dot.visible=on})}
+function resize(){
+ if(!renderer)return;
+ const w=stage.clientWidth,h=stage.clientHeight;
+ renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+}
+function animate(t){
+ requestAnimationFrame(animate);
+ const sec=t*.001;
+ if(workMode&&t-lastAdvance>3300){currentStep=(currentStep+1)%flows[currentFlow].length;updateStep();}
+ const follow=workMode&&currentFlow==='follow';
+ const terrain=workMode&&currentFlow==='terrain';
+ if(follow||terrain){
+  headShell.rotation.y=Math.sin(sec*1.05)*.11;
+  optics.rotation.y=headShell.rotation.y;
+  headShell.rotation.x=Math.sin(sec*.8)*.045;
+  optics.rotation.x=headShell.rotation.x;
+  body.position.y=1.36+Math.sin(sec*2.2)*.025;
+  wheelMeshes.forEach(function(w,i){w.rotation.x=sec*3.5*(i===0?1:-1)});
+  legs.rotation.z=Math.sin(sec*2)*.025;
+ }else{
+  headShell.rotation.set(0,0,0);optics.rotation.set(0,0,0);body.position.y=1.36;legs.rotation.z=0;
+  wheelMeshes.forEach(function(w){w.rotation.set(0,0,0)});
+ }
+ if(follow&&currentFlow==='follow'&&currentStep===2)tracker.visible=true;
+ else if(!workMode)tracker.visible=activePart==='tracker'||exploded;
+ if(terrain&&currentStep>=2&&currentStep<=5){legs.rotation.z=Math.sin(sec*5)*.16;body.position.y=1.36+Math.abs(Math.sin(sec*5))*.12;wheelMeshes.forEach(function(w){w.rotation.x=sec*5})}
+ Object.keys(parts).forEach(function(id){parts[id].forEach(function(g){if(g.userData.target)g.position.lerp(g.userData.target,.09)})});
+ energyCurves.concat(signalCurves).forEach(function(p){const on=workMode;p.line.visible=on;p.dot.visible=on;if(on)p.dot.position.copy(p.curve.getPoint((sec*.28+p.phase)%1))});
+ if(controls)controls.update();
+ if(renderer)renderer.render(scene,camera);
+}
+renderTree();renderInfo('whole');highlight('whole');setExplode(false);resize();window.addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);requestAnimationFrame(animate);
+</script>
+</body>
+</html>
