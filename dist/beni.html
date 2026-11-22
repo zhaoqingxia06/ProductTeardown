@@ -159,7 +159,7 @@ function renderInfo(id){
  if(d.what)html+='<div class="info-block"><h3>功能与作用</h3><p>'+d.what+'</p></div>';
  if(d.spec)html+='<div class="info-block"><h3>关键规格</h3><div class="specs">'+d.spec.map(function(s){return '<div class="spec"><span>'+s[0]+'</span><b>'+s[1]+'</b></div>'}).join('')+'</div></div>';
  if(d.confidence)html+='<div class="'+statusClass+'">'+d.confidence+'</div>';
- if(id==='whole')html+='<p class="note">模型采用公开外观信息进行原创重建；内部器件布局为功能架构示意，不代表官方 CAD 或实物拆机结果。</p><div class="info-block"><h3>资料来源</h3><div class="source-list"><a href="https://www.mondorobotics.com/pages/beni-camera-robot" target="_blank" rel="noopener">Mondo Robotics · Beni 官方规格与功能 ↗</a><a href="https://www.mondorobotics.com/pages/support/product-tutorials" target="_blank" rel="noopener">Mondo Robotics · 官方教程与 FAQ ↗</a><a href="https://www.tomsguide.com/cameras-photography/i-cant-fly-drones-in-nyc-so-i-let-this-camera-robot-follow-me-around-instead-and-came-away-impressed" target="_blank" rel="noopener">Tom’s Guide · 实机体验 ↗</a><a href="https://www.slashgear.com/2269448/mondo-robotics-beni-review/" target="_blank" rel="noopener">SlashGear · 跟踪与避障实测 ↗</a></div></div>';
+ if(id==='whole')html+='<p class="note">模型采用公开外观信息进行原创重建；内部器件布局为功能架构示意，不代表官方 CAD 或实物拆机结果。独立实测评测也记录了遮挡和复杂环境下跟踪丢失、避障失效的情况；官方功能宣称不等于所有环境下都能可靠自主导航。</p><div class="info-block"><h3>资料来源</h3><div class="source-list"><a href="https://www.mondorobotics.com/pages/beni-camera-robot" target="_blank" rel="noopener">Mondo Robotics · Beni 官方规格与功能 ↗</a><a href="https://www.mondorobotics.com/zh/pages/beni-camera-robot" target="_blank" rel="noopener">Mondo Robotics · 中文规格与追踪器说明 ↗</a><a href="https://www.mondorobotics.com/pages/support/product-tutorials" target="_blank" rel="noopener">Mondo Robotics · 官方教程与 FAQ ↗</a><a href="https://www.tomsguide.com/cameras-photography/i-cant-fly-drones-in-nyc-so-i-let-this-camera-robot-follow-me-around-instead-and-came-away-impressed" target="_blank" rel="noopener">Tom’s Guide · 实机体验 ↗</a><a href="https://www.slashgear.com/2269448/mondo-robotics-beni-review/" target="_blank" rel="noopener">SlashGear · 跟踪与避障实测 ↗</a></div></div>';
  info.innerHTML=html;
 }
 function renderStepInfo(){
@@ -169,7 +169,6 @@ function renderStepInfo(){
 }
 function selectPart(id){
  if(workMode)return;
- currentPart=id;
  document.querySelectorAll('.part-btn').forEach(function(b){b.classList.toggle('active',b.dataset.id===id)});
  renderInfo(id);
  highlight(id);
