@@ -68,6 +68,21 @@ body.workflow #infoPanel .kicker{margin-bottom:18px}
 @media(max-width:1100px){main{grid-template-columns:240px minmax(300px,1fr) 260px}#navigation{padding:22px 12px}#infoPanel{padding:22px 16px}}
 @media(max-width:800px){header{padding:0 16px}header .sub{display:none}main{height:auto;min-height:0;display:flex;flex-direction:column;gap:0}#stage{order:1;height:56vh;min-height:390px;margin:10px;border-radius:12px}#navigation{order:2;border-right:0;border-top:1px solid var(--line);padding:18px 16px;max-height:none}#infoPanel{order:3;border-left:0;border-top:1px solid var(--line);padding:22px 20px}body.workflow #navigation{max-height:none}.stage-tools{left:12px;bottom:12px;gap:5px}.stage-tools button{padding:8px 10px}.stage-hint{right:12px;top:12px}.stage-top{left:14px;top:14px}.legend{right:12px;bottom:56px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+body.workflow #structureView{display:block}
+body.workflow #workflowView{display:block;position:absolute;z-index:4;right:20px;top:20px;bottom:20px;width:min(350px,32%);overflow:auto;padding:16px;background:rgba(250,251,253,.88);border-radius:16px;box-shadow:0 12px 32px rgba(34,50,73,.15);backdrop-filter:blur(14px)}
+body.workflow #infoPanel{display:none}
+body.workflow main{grid-template-columns:276px minmax(360px,1fr)}
+body.workflow .stage-top,body.workflow .stage-hint{display:none}
+body.workflow .legend{left:18px;right:auto;top:18px;bottom:auto}
+body.workflow #focusTag{left:20px;right:auto;bottom:75px}
+body.workflow .step-btn{position:relative;text-align:center;border:1px solid #ccd4df;background:#f6f7f9;padding:16px 14px;margin:0 0 32px;box-shadow:0 5px 15px rgba(31,50,75,.08)}
+body.workflow .step-btn:not(:last-child)::after{content:'↓';position:absolute;top:100%;left:50%;height:32px;color:#9aa8b8;font-size:22px}
+body.workflow .step-btn.active{border-color:#367de2;background:#e8f1ff;color:#1d508d}
+body.workflow .step-btn small{font-size:12px;color:inherit}
+body.workflow .flow-modes{position:sticky;top:-16px;z-index:2;background:#f8f9fb;padding:8px 0}
+body.workflow .flow-modes button{flex:1;font-size:12px}
+body.workflow #workflowView > .section-label,body.workflow #workflowView > .note{display:none}
+@media(max-width:800px){body.workflow main{display:flex}body.workflow #stage{height:75vh}body.workflow #workflowView{position:relative;inset:auto;width:auto;max-height:50vh;margin:10px}body.workflow #navigation{display:contents}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
@@ -78,7 +93,7 @@ body.workflow #infoPanel .kicker{margin-bottom:18px}
  <div id="structureView"><div class="section-label">产品结构</div><div id="tree"></div></div>
  <div id="workflowView">
   <div class="section-label">工作流程</div>
-  <div class="flow-modes"><button class="active" data-flow="follow">自动跟拍</button><button data-flow="terrain">越障与自恢复</button></div>
+  <div class="flow-modes"><button class="active" data-flow="follow">自动跟拍</button><button data-flow="capture">拍摄与存储</button><button data-flow="terrain">越障与自恢复</button></div>
   <div id="steps"></div>
   <p class="note">流程依据公开功能描述整理；算法、控制器型号及内部阈值未公开。自动循环播放，点击步骤可重新讲解。</p>
  </div>
@@ -121,6 +136,12 @@ const groups=[
  ['外置配件',['tracker']]
 ];
 const flows={
+ capture:[
+ ['采集画面','摄像头将进入镜头的光转换为图像信号。','camera'],
+ ['调整拍摄方向','头部调整镜头方向，配合防抖保持画面稳定。','head'],
+ ['处理影像','机载系统处理图像并生成视频。','control'],
+ ['录制与存储','视频写入机身存储或 microSD 卡。','control']
+ ],
  follow:[
  ['采集目标信息','机载摄像头持续采集画面，深度感知与空间传感器提供距离和环境信息。','camera'],
  ['识别并锁定目标','视觉跟踪识别人或宠物，估计目标在画面中的位置；识别能力与具体算法未公开。','sensors'],
@@ -146,10 +167,11 @@ const flows={
 let currentFlow='follow',currentStep=0,workMode=false,exploded=false,lastAdvance=0;
 const tree=document.querySelector('#tree'),stepList=document.querySelector('#steps'),info=document.querySelector('#infoContent');
 function renderTree(){
- const whole=document.createElement('button');whole.className='part-btn active';whole.dataset.id='whole';whole.innerHTML='整机<small>系统总览</small>';whole.addEventListener('click',function(){selectPart('whole')});tree.append(whole);
+ const whole=document.createElement('button');whole.className='part-btn active';whole.dataset.id='whole';whole.textContent='Beni 跟拍机器人';whole.addEventListener('click',function(){selectPart('whole')});tree.append(whole);
  groups.forEach(function(group){
-  const label=document.createElement('div');label.className='group-label';label.textContent=group[0];tree.append(label);
-  group[1].forEach(function(id){const b=document.createElement('button');b.className='part-btn';b.dataset.id=id;b.innerHTML=D[id].name+'<small>'+D[id].sub+'</small>';b.addEventListener('click',function(){selectPart(id)});tree.append(b)});
+  const section=document.createElement('details');section.open=true;
+  const label=document.createElement('summary');label.className='group-label';label.textContent=group[0];section.append(label);
+  group[1].forEach(function(id){const b=document.createElement('button');b.className='part-btn';b.dataset.id=id;b.textContent=D[id].name;b.addEventListener('click',function(){selectPart(id)});section.append(b)});tree.append(section);
  });
 }
 function renderInfo(id){
@@ -187,10 +209,12 @@ function renderSteps(){
 function updateStep(){
  const s=flows[currentFlow][currentStep];
  stepList.querySelectorAll('.step-btn').forEach(function(b,i){b.classList.toggle('active',i===currentStep)});
+ const active=stepList.querySelector('.step-btn.active');
+ if(active){const panel=document.querySelector('#workflowView');const top=active.offsetTop-panel.offsetTop;panel.scrollTo({top:Math.max(0,top-panel.clientHeight*.35),behavior:'smooth'})}
  renderStepInfo();highlight(s[2]);
  document.querySelector('#focusTag').textContent='当前部件 · '+D[s[2]].name;
  document.querySelector('#stageTitle').textContent=s[0];
- document.querySelector('#stageSub').textContent=(currentFlow==='follow'?'自动跟拍':'越障与自恢复')+' · '+String(currentStep+1)+' / '+String(flows[currentFlow].length);
+ document.querySelector('#stageSub').textContent=({follow:'自动跟拍',capture:'拍摄与存储',terrain:'越障与自恢复'}[currentFlow])+' · '+String(currentStep+1)+' / '+String(flows[currentFlow].length);
  lastAdvance=performance.now();
 }
 document.querySelectorAll('[data-flow]').forEach(function(b){b.addEventListener('click',function(){
@@ -324,8 +348,8 @@ function animate(t){
   headShell.rotation.x=Math.sin(sec*.8)*.045;
   optics.rotation.x=headShell.rotation.x;
   
-  wheelMeshes.forEach(function(w,i){w.rotation.x=sec*3.5*(i===0?1:-1)});
-  legs.rotation.z=Math.sin(sec*2)*.025;
+  if(follow&&currentStep===6)wheelMeshes.forEach(function(w,i){w.rotation.x=sec*3.5*(i===0?1:-1)});
+  if(follow&&currentStep===6)legs.rotation.z=Math.sin(sec*2)*.025;
  }else{
   headShell.rotation.set(0,0,0);optics.rotation.set(0,0,0);legs.rotation.z=0;
   wheelMeshes.forEach(function(w){w.rotation.set(0,0,0)});
@@ -333,7 +357,7 @@ function animate(t){
  tracker.visible=workMode?(follow&&currentStep===2):(activePart==='tracker'||exploded);
  if(terrain&&currentStep>=2&&currentStep<=5){legs.rotation.z=Math.sin(sec*5)*.16;body.position.y=1.36+Math.abs(Math.sin(sec*5))*.12;wheelMeshes.forEach(function(w){w.rotation.x=sec*5})}
  Object.keys(parts).forEach(function(id){parts[id].forEach(function(g){if(g.userData.target)g.position.lerp(g.userData.target,.09)})});
- energyCurves.concat(signalCurves).forEach(function(p){const active=workMode&&(currentFlow==='follow'?(p.followSteps===undefined||p.followSteps.includes(currentStep)):(p.terrainSteps===undefined||p.terrainSteps.includes(currentStep)));p.line.visible=active;p.dot.visible=active;if(active)p.dot.position.copy(p.curve.getPoint((sec*.28+p.phase)%1))});
+ energyCurves.concat(signalCurves).forEach(function(p){const steps=currentFlow==='follow'?p.followSteps:currentFlow==='terrain'?p.terrainSteps:[];const active=workMode&&steps.includes(currentStep);p.line.visible=active;p.dot.visible=active;if(active)p.dot.position.copy(p.curve.getPoint((sec*.28+p.phase)%1))});
  if(controls)controls.update();
  if(renderer)renderer.render(scene,camera);
 }
